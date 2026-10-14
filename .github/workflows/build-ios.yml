@@ -1,0 +1,28 @@
+name: Build iPhone app
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test typing behavior
+        run: |
+          mkdir -p build
+          swiftc Shared/TypingSession.swift Tests/TypingSessionTests.swift -o build/session-tests
+          build/session-tests
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Compile and package unsigned IPA
+        run: bash scripts/build-unsigned.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LetterTyper-unsigned
+          path: build/LetterTyper-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
